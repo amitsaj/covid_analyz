@@ -1,6 +1,6 @@
 create database covid;
 use covid;
-CREATE TABLE covid_data1 (
+CREATE TABLE covid_data (
 	iso_code VARCHAR(8) NOT NULL, 
 	continent VARCHAR(13), 
 	location VARCHAR(32) NOT NULL, 
@@ -71,7 +71,7 @@ CREATE TABLE covid_data1 (
 );
 SET SESSION sql_mode = '';
 load data infile 'D:/covid-data-xl.csv'
-into table covid_data1
+into table covid_data
 fields terminated by ','
 enclosed by '"' 
 lines terminated by '\n'
@@ -142,7 +142,8 @@ with highest_deaths as (
 select iso_code,new_date,continent,location,total_deaths, row_number() over (partition by continent order by total_deaths desc) ranking
 from covid_deaths 
 )
-select iso_code,new_date,continent,location,total_deaths from highest_deaths where ranking = 1;
+select iso_code,new_date,continent,location,total_deaths from highest_deaths where ranking = 1 and location <> 'world'
+order by total_deaths desc;
 
 call coviddeaths;
 -- leading covid cases country in each continent
@@ -150,5 +151,6 @@ with highest_cases as (
 select iso_code,new_date,continent,location,total_cases, row_number() over (partition by continent order by total_cases desc) ranking
 from covid_deaths 
 )
-select iso_code,continent,location,total_cases from highest_cases where ranking = 1 order by total_cases desc;
+select iso_code,continent,location,total_cases from highest_cases where ranking = 1 and location <> 'world'
+order by total_cases desc;
 
