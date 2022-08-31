@@ -144,3 +144,11 @@ from covid_deaths
 )
 select iso_code,new_date,continent,location,total_deaths from highest_deaths where ranking = 1;
 
+call coviddeaths;
+-- leading covid cases country in each continent
+with highest_cases as (
+select iso_code,new_date,continent,location,total_cases, row_number() over (partition by continent order by total_cases desc) ranking
+from covid_deaths 
+)
+select iso_code,continent,location,total_cases from highest_cases where ranking = 1 order by total_cases desc;
+
