@@ -154,3 +154,96 @@ from covid_deaths
 select iso_code,continent,location,total_cases from highest_cases where ranking = 1 and location <> 'world'
 order by total_cases desc;
 
+call coviddeaths
+
+-- cases and deaths in year 2020,2021,2022(till 29th august)
+
+select location, year(new_date) year, sum(total_cases) total_cases_yearwise, sum(total_deaths) total_deaths_yearwise
+from covid_deaths
+where location = 'India' 
+group by 2
+
+
+create view a as(
+select location, year(new_date) year, sum(total_cases) total_cases_yearwise, sum(total_deaths) total_deaths_yearwise
+from covid_deaths
+where location = 'India' 
+group by 2)
+
+select * from a;
+
+-- yearwise death count for year 2021 and 2022
+select frst.location, frst.year, (frst.total_cases_yearwise)-(scnd.total_cases_yearwise) cases, 
+(frst.total_deaths_yearwise)-(scnd.total_deaths_yearwise) deaths 
+from a as frst
+cross join a as scnd
+where (frst.year = 2022 and scnd.year = 2021) or (frst.year = 2021 and scnd.year = 2020);
+
+-- total cases count continentwise
+select location, max(total_cases) total_cases_count
+from covid_deaths
+where continent = '' and location  not like '%income%'
+group by 1
+order by 2 desc
+
+-- total death count continent wise
+select location , max(total_deaths) total_deaths_count
+from covid_deaths
+where continent = '' and location not like '%income%'
+group by 1
+order by 2 desc;
+
+select * from covid_data;
+
+create view covid_vaccinated as
+(select iso_code, continent, location, population, new_date, total_cases, new_cases, total_tests, new_tests, positive_rate, total_vaccinations,
+people_vaccinated, people_fully_vaccinated, total_boosters, new_vaccinations, aged_65_older,median_age, aged_70_older, gdp_per_capita
+from covid_data);
+
+select * from covid_vaccinated
+
+-- top 10 vaccinated countries
+select location, max(total_vaccinations) total_vaccination
+from covid_vaccinated 
+where continent <> ''
+group by 1
+order by total_vaccination desc
+limit 10;
+
+with cte as(
+select location,new_date, total_vaccinations, dense_rank() over ( partition by location order by total_vaccinations desc) ranks
+from covid_vaccinated 
+where continent <> '')
+select * from cte where ranks = 1
+order by total_vaccinations desc
+
+-- top 10 fully vaccinated countries
+select  location,  max(people_fully_vaccinated) total_fully_vaccinated
+from covid_vaccinated
+where continent <> ''
+group by 1
+order by 2 desc
+limit 10
+
+-- top 10 countries with booster jibes
+select  location,  max(total_boosters) total_booster_doses
+from covid_vaccinated
+where continent <> ''
+group by 1
+order by 2 desc
+limit 10
+
+-- vaccine percentage by population of the countries
+select continent, location , population, total_vaccinations, total_vaccinations/population*100  vaccine_percentage
+from covid_vaccinated
+where continent <> '' 
+order by 5 desc
+
+select * from covid_data
+
+
+select  location, median_age
+from covid_data
+where continent <> '' and location = 'india'
+
+
